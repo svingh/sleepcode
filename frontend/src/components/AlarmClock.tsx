@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, Trophy, Code } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, Plus, Trophy, Code, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AlarmSetModal from './AlarmSetModal';
 import LeetCodeChallenge from './LeetCodeChallenge';
+
 
 interface Alarm {
   id: string;
@@ -14,6 +16,7 @@ interface Alarm {
 }
 
 const AlarmClock = () => {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
@@ -107,6 +110,12 @@ const AlarmClock = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Add logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("leetcodeUsername");
+    navigate("/login");
   };
 
   if (isAlarmRinging) {
@@ -209,6 +218,18 @@ const AlarmClock = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Updated Logout Button */}
+        <div className="flex justify-center">
+          <Button 
+            onClick={handleLogout}
+            variant="outline" 
+            className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Log Out
+          </Button>
+        </div>
       </div>
 
       {showSetAlarm && (
