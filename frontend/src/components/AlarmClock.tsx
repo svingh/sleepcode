@@ -19,6 +19,22 @@ const AlarmClock = () => {
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [showSetAlarm, setShowSetAlarm] = useState(false);
   const [solvedProblems, setSolvedProblems] = useState(0);
+  const username = localStorage.getItem("leetcodeUsername") || "CodeAlarm";
+
+  // Fetch solved problems count on component mount and after solving a problem
+  const fetchSolvedProblems = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/${username}/solved`);
+      const data = await response.json();
+      setSolvedProblems(data.solvedProblem || 0);
+    } catch (error) {
+      console.error("Error fetching solved problems:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSolvedProblems();
+  }, [username]);
 
   // Update current time every second
   useEffect(() => {
@@ -51,7 +67,8 @@ const AlarmClock = () => {
   };
 
   const handleProblemSolved = () => {
-    setSolvedProblems(prev => prev + 1);
+    // Fetch the updated count after marking a problem as solved
+    fetchSolvedProblems();
     setIsAlarmRinging(false);
   };
 
@@ -107,7 +124,7 @@ const AlarmClock = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Clock className="w-6 h-6 text-orange-400" />
-            <h1 className="text-xl font-bold text-white">CodeAlarm</h1>
+            <h1 className="text-xl font-bold uppercase text-white">{username}</h1>
           </div>
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-400" />
