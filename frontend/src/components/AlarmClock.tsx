@@ -22,6 +22,7 @@ const AlarmClock = () => {
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [showSetAlarm, setShowSetAlarm] = useState(false);
   const [solvedProblems, setSolvedProblems] = useState(0);
+  const [initialSolvedCount, setInitialSolvedCount] = useState(0);
   const username = localStorage.getItem("leetcodeUsername") || "CodeAlarm";
 
   // Fetch solved problems count on component mount and after solving a problem
@@ -30,8 +31,10 @@ const AlarmClock = () => {
       const response = await fetch(`http://localhost:3000/${username}/solved`);
       const data = await response.json();
       setSolvedProblems(data.solvedProblem || 0);
+      return data.solvedProblem || 0;
     } catch (error) {
       console.error("Error fetching solved problems:", error);
+      return solvedProblems; // Return current count if fetch fails
     }
   };
 
@@ -66,12 +69,12 @@ const AlarmClock = () => {
   }, [alarms, isAlarmRinging]);
 
   const triggerAlarm = () => {
+    setInitialSolvedCount(solvedProblems);
     setIsAlarmRinging(true);
   };
 
   const handleProblemSolved = () => {
-    // Fetch the updated count after marking a problem as solved
-    fetchSolvedProblems();
+    // The actual fetching and verification is now handled in LeetCodeChallenge
     setIsAlarmRinging(false);
   };
 
@@ -122,6 +125,9 @@ const AlarmClock = () => {
     return (
       <LeetCodeChallenge 
         onSolved={handleProblemSolved}
+        initialSolvedCount={initialSolvedCount}
+        currentSolvedCount={solvedProblems}
+        fetchSolvedProblems={fetchSolvedProblems}
       />
     );
   }

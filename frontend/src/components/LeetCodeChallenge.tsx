@@ -1,16 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Code, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Code, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface LeetCodeChallengeProps {
   onSolved: () => void;
+  initialSolvedCount: number;
+  currentSolvedCount: number;
+  fetchSolvedProblems: () => Promise<number>;
 }
 
-const LeetCodeChallenge = ({ onSolved }: LeetCodeChallengeProps) => {
+const LeetCodeChallenge = ({ onSolved, initialSolvedCount, currentSolvedCount, fetchSolvedProblems }: LeetCodeChallengeProps) => {
   const [isRinging, setIsRinging] = useState(true);
   const [showSolved, setShowSolved] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     // Simulate alarm ringing animation
@@ -21,11 +25,30 @@ const LeetCodeChallenge = ({ onSolved }: LeetCodeChallengeProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleMarkAsSolved = () => {
-    setShowSolved(true);
-    setTimeout(() => {
-      onSolved();
-    }, 1500);
+  const handleMarkAsSolved = async () => {
+    setIsChecking(true);
+    try {
+      const latestCount = await fetchSolvedProblems();
+      if (latestCount > initialSolvedCount) {
+        setShowSolved(true);
+        setTimeout(() => {
+          onSolved();
+        }, 1500);
+      } else {
+        setShowError(true);
+        setTimeout(() => {
+          setShowError(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Error checking solved count:", error);
+      setShowError(true);
+      setTimeout(() => {
+        setShowError(false);
+      }, 3000);
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   if (showSolved) {
@@ -36,6 +59,20 @@ const LeetCodeChallenge = ({ onSolved }: LeetCodeChallengeProps) => {
             <CheckCircle className="w-20 h-20 text-green-400 mx-auto mb-4 animate-pulse" />
             <h2 className="text-3xl font-bold text-white mb-2">Problem Solved!</h2>
             <p className="text-green-200 text-lg">Great job! Alarm has been disabled.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-900 to-red-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-sm bg-red-900/40 border-red-700 backdrop-blur-sm text-center">
+          <CardContent className="p-8">
+            <XCircle className="w-20 h-20 text-red-400 mx-auto mb-4 animate-pulse" />
+            <h2 className="text-3xl font-bold text-white mb-2">Not So Fast!</h2>
+            <p className="text-red-200 text-lg">We haven't detected a new solved problem yet. Please solve a problem first!</p>
           </CardContent>
         </Card>
       </div>
@@ -79,10 +116,15 @@ const LeetCodeChallenge = ({ onSolved }: LeetCodeChallengeProps) => {
         <div className="space-y-4">
           <Button
             onClick={handleMarkAsSolved}
+            disabled={isChecking}
             className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-xl font-semibold"
           >
-            <CheckCircle className="w-6 h-6 mr-3" />
-            I Solved a Problem!
+            {isChecking ? (
+              <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+            ) : (
+              <CheckCircle className="w-6 h-6 mr-3" />
+            )}
+            {isChecking ? "Checking..." : "I Solved a Problem!"}
           </Button>
         </div>
 
@@ -92,10 +134,10 @@ const LeetCodeChallenge = ({ onSolved }: LeetCodeChallengeProps) => {
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-blue-200 text-base font-medium">Honor System</p>
+                <p className="text-blue-200 text-base font-medium">Verification Required</p>
                 <p className="text-blue-300/80 text-sm mt-1">
-                  This alarm works on trust! Only click "I Solved a Problem!" after you've 
-                  successfully submitted a solution on LeetCode.
+                  The alarm will only stop when we detect that you've successfully solved a new LeetCode problem.
+                  Your current solved count: {currentSolvedCount}
                 </p>
               </div>
             </div>
