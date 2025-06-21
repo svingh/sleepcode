@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Code, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AlertTriangle, Code, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -13,6 +14,9 @@ interface LeetCodeChallengeProps {
 const LeetCodeChallenge = ({ onSolved, initialSolvedCount, currentSolvedCount, fetchSolvedProblems }: LeetCodeChallengeProps) => {
   const [isRinging, setIsRinging] = useState(true);
   const [showSolved, setShowSolved] = useState(false);
+  
+  // Add audio ref for alarm sound
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showError, setShowError] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -22,10 +26,32 @@ const LeetCodeChallenge = ({ onSolved, initialSolvedCount, currentSolvedCount, f
       setIsRinging(prev => !prev);
     }, 500);
 
-    return () => clearInterval(interval);
+    // Start playing alarm sound when component mounts
+    if (audioRef.current) {
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.5;
+      audioRef.current.play().catch(error => {
+        console.error('Error playing alarm sound:', error);
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      // Stop sound when component unmounts
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
   }, []);
 
   const handleMarkAsSolved = async () => {
+    // Stop the alarm sound
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    
     setIsChecking(true);
     try {
       const latestCount = await fetchSolvedProblems();
@@ -81,6 +107,15 @@ const LeetCodeChallenge = ({ onSolved, initialSolvedCount, currentSolvedCount, f
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-red-900 via-orange-900 to-red-900 p-4 pb-8 transition-all duration-500 ${isRinging ? 'brightness-110' : 'brightness-90'}`}>
+      {/* Add hidden audio element */}
+      <audio 
+        ref={audioRef}
+        preload="auto"
+      >
+        <source src="/alarm-sound.wav" type="audio/wav" />
+        Your browser does not support the audio element.
+      </audio>
+      
       <div className="w-full max-w-sm mx-auto space-y-6">
         {/* Alarm Header */}
         <Card className={`bg-red-900/40 border-red-700 backdrop-blur-sm transition-all duration-500 ${isRinging ? 'ring-2 ring-red-500' : ''}`}>
