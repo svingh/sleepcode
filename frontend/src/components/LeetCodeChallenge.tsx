@@ -45,12 +45,6 @@ const LeetCodeChallenge = ({ onSolved, initialSolvedCount, currentSolvedCount, f
   }, []);
 
   const handleMarkAsSolved = async () => {
-    // Stop the alarm sound
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    
     setIsChecking(true);
     try {
       const latestCount = await fetchSolvedProblems();
