@@ -28,7 +28,14 @@ const AlarmClock = () => {
   // Fetch solved problems count on component mount and after solving a problem
   const fetchSolvedProblems = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/${username}/solved`);
+      const response = await fetch(`http://localhost:3000/${username}/solved?ts=${Date.now()}`, { 
+        cache: "no-store",
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       const data = await response.json();
       setSolvedProblems(data.solvedProblem || 0);
       return data.solvedProblem || 0;
